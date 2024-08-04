@@ -1,36 +1,36 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+module.exports = (sequelize, DataTypes) => {
+  const User = sequelize.define('User', {
+    user_id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true
+    },
+    username: {
+      type: DataTypes.STRING,
+      unique: true,
+      allowNull: false
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    login_attempts: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
+    last_login_attempt: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
+    remember_me_token: {
+      type: DataTypes.STRING,
+      defaultValue: null
+    }
+  }, {
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
+  });
 
-const userSchema = new mongoose.Schema({
-  username: {
-    type: String,
-    required: [true, 'Username is required'],
-    unique: true,
-    trim: true,
-    minlength: [3, 'Username must be at least 3 characters long']
-  },
-  email: {
-    type: String,
-    required: [true, 'Email is required'],
-    unique: true,
-    trim: true,
-    match: [/.+@.+\..+/, 'Please enter a valid email address']
-  },
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-    minlength: [6, 'Password must be at least 6 characters long']
-  },
-}, {
-  timestamps: true
-});
-
-// Middleware untuk hashing password sebelum menyimpan user
-userSchema.pre('save', async function (next) {
-  if (this.isModified('password')) {
-    this.password = await bcrypt.hash(this.password, 10);
-  }
-  next();
-});
-
-module.exports = mongoose.model('User', userSchema);
+  return User;
+};
