@@ -1,9 +1,9 @@
-const User = require('../models/User');
+const db = require('../models');
 const bcrypt = require('bcrypt');
 
 exports.getUsers = async (req, res) => {
   try {
-    const users = await User.find();
+    const users = await db.User.findAll();
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -12,7 +12,7 @@ exports.getUsers = async (req, res) => {
 
 exports.getUser = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await db.User.findByPk(req.params.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -26,7 +26,7 @@ exports.updateUser = async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
-    const user = await User.findById(req.params.id);
+    const user = await db.User.findByPk(req.params.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -44,10 +44,11 @@ exports.updateUser = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    const user = await db.User.findByPk(req.params.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+    await user.destroy();
     res.status(200).json({ message: 'User deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
