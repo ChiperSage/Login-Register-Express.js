@@ -7,11 +7,7 @@ CREATE TABLE users (
     last_login_attempt INT DEFAULT 0,
     remember_me_token VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    role_id INT,
-    group_id INT,
-    FOREIGN KEY (role_id) REFERENCES roles(role_id),
-    FOREIGN KEY (group_id) REFERENCES groups(id)
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create the 'roles' table
