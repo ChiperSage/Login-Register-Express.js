@@ -30,7 +30,7 @@ This is a simple Express.js application that provides user registration and logi
 1. **Install Dependencies**: Ensure you have Node.js and MySQL installed. Install the required npm packages by running `npm install express ejs mysql2`.
 
 2. **Configure MySQL**:
-   - Create a MySQL database named `mydatabase`.
+   - Create a MySQL database named `express_auth`.
    - Create a `users` table with columns for `id`, `username`, `email`, and `password`.
 
 3. **Run the Application**:
