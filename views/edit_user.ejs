@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit User</title>
+</head>
+<body>
+    <h2>Edit User</h2>
+    <form method="POST" action="/user/edit/<%= user.user_id %>">
+        <label>Username:</label><br/>
+        <input type="text" name="username" value="<%= user.username %>" required/><br/>
+
+        <label>Email:</label><br/>
+        <input type="email" name="email" value="<%= user.email %>" required/><br/>
+
+        <label>Password:</label><br/>
+        <input type="password" name="password"/><br/>
+
+        <label>Confirm Password:</label><br/>
+        <input type="password" name="confirm_password"/><br/><br/>
+
+        <button type="submit">Save Changes</button>
+    </form>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+        <p style="color:red;"><%= error %></p>
+    <% } %>
+</body>
+</html>
