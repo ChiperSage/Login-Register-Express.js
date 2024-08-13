@@ -1,7 +1,7 @@
+const bcrypt = require('bcrypt');
 const express = require('express');
 const router = express.Router();
 
-// **New Code: Import MySQL connection from the new location**
 const db = require('../config/db');
 
 // Display Register Form
@@ -10,39 +10,31 @@ router.get('/register', (req, res) => {
     res.render('register', { error });
 });
 
-// Handle Registration Submission
-router.post('/register', (req, res) => {
+// Handle Registration
+router.post('/register', async (req, res) => {
     const { username, email, password, confirm_password } = req.body;
 
+    // Validation
     if (!username || !email || !password || !confirm_password) {
-        return res.redirect('/auth/register?error=All fields are required.');
+        return res.render('register', { error: 'All fields are required' });
     }
-
     if (password !== confirm_password) {
-        return res.redirect('/auth/register?error=Passwords do not match.');
+        return res.render('register', { error: 'Passwords do not match' });
+    }
+    
+    // Check if username or email already exists
+    const [existingUser] = await db.query('SELECT * FROM users WHERE username = ? OR email = ?', [username, email]);
+    if (existingUser.length > 0) {
+        return res.render('register', { error: 'Username or email already in use' });
     }
 
-    // **New Code: Check if the username or email already exists**
-    db.query('SELECT * FROM users WHERE username = ? OR email = ?', [username, email], (err, results) => {
-        if (err) {
-            console.error('Database query error:', err);
-            return res.redirect('/auth/register?error=Database error.');
-        }
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-        if (results.length > 0) {
-            return res.redirect('/auth/register?error=Username or email already exists.');
-        }
+    // Insert the new user into the database
+    await db.query('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [username, email, hashedPassword]);
 
-        // **New Code: Insert new user into the database**
-        db.query('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [username, email, password], (err, results) => {
-            if (err) {
-                console.error('Database query error:', err);
-                return res.redirect('/auth/register?error=Database error.');
-            }
-
-            res.send(`Registration successful! Welcome, ${username}.`);
-        });
-    });
+    res.redirect('/auth/login');
 });
 
 // Display Login Form
@@ -51,25 +43,45 @@ router.get('/login', (req, res) => {
     res.render('login', { error });
 });
 
-// Handle Login Submission
-router.post('/login', (req, res) => {
-    const { email, password } = req.body;
+// Handle Login
+router.post('/login', async (req, res) => {
+    const { usernameOrEmail, password } = req.body;
 
-    if (!email || !password) {
-        return res.redirect('/auth/login?error=All fields are required.');
+    // Validation
+    if (!usernameOrEmail || !password) {
+        return res.render('login', { error: 'Username or Email and Password are required' });
     }
 
-    db.query('SELECT * FROM users WHERE email = ? AND password = ?', [email, password], (err, results) => {
+    // Fetch user by username or email
+    const [users] = await db.query('SELECT * FROM users WHERE username = ? OR email = ?', [usernameOrEmail, usernameOrEmail]);
+    if (users.length === 0) {
+        return res.render('login', { error: 'Invalid username or password' });
+    }
+
+    const user = users[0];
+
+    // Compare passwords
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+        return res.render('login', { error: 'Invalid username or password' });
+    }
+
+    // Store user in session
+    req.session.user = { id: user.user_id, username: user.username, email: user.email };
+
+    res.redirect('/dashboard');
+});
+
+// GET route for logout
+router.get('/logout', (req, res) => {
+    // Destroy the session to log the user out
+    req.session.destroy((err) => {
         if (err) {
-            console.error('Database query error:', err);
-            return res.redirect('/auth/login?error=Database error.');
+            console.error('Session destruction error:', err);
+            return res.redirect('/dashboard'); // Redirect back to the dashboard on error
         }
 
-        if (results.length === 0) {
-            return res.redirect('/auth/login?error=Invalid email or password.');
-        }
-
-        res.send('Login successful!');
+        res.redirect('/auth/login'); // Redirect to the login page after successful logout
     });
 });
 
